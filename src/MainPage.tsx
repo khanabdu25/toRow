@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, MouseEvent } from "react";
+import { useState, ChangeEvent } from "react";
 import * as XLSX from "xlsx";
 
 type ParticipantData = {
