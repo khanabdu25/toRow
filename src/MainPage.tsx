@@ -1,34 +1,31 @@
-import React, { useState, useEffect } from "react";
+import { useState, ChangeEvent, MouseEvent } from "react";
 import * as XLSX from "xlsx";
 
+type ParticipantData = {
+  Time: number;
+  Rating: number;
+};
+
+type ProcessedData = {
+  Participant: string;
+  Data: ParticipantData[];
+};
+
 export default function MainPage() {
-  const [file, setFile] = useState(null);
-  const [jsonData, setJsonData] = useState([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [jsonData, setJsonData] = useState<ProcessedData[]>([]);
 
-  // useEffect(() => {
-  //   fetch("/HelpFile.xlsx")
-  //     .then((res) => res.arrayBuffer())
-  //     .then((buffer) => {
-  //       const workbook = XLSX.read(buffer, { type: "buffer" });
-  //       const worksheetName = workbook.SheetNames[0];
-  //       const worksheet = workbook.Sheets[worksheetName];
-  //       const data = XLSX.utils.sheet_to_json(worksheet);
-  //       const processedData = preprocessData(data);
-  //       setJsonData(processedData);
-  //       saveProcessedData(processedData);
-  //     })
-  //     .catch((error) => console.error("Error reading Excel file:", error));
-  // }, []);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
     setFile(file);
   };
 
-  const handleFileProcess = () => {
+  const handleFileProcess = (e: MouseEvent<HTMLButtonElement>) => {
+    if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const buffer = e.target.result;
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const buffer = e.target?.result as ArrayBuffer;
       const workbook = XLSX.read(buffer, { type: "buffer" });
       const worksheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[worksheetName];
@@ -40,11 +37,11 @@ export default function MainPage() {
     reader.readAsArrayBuffer(file);
   };
 
-  function preprocessData(data) {
-    const groupedData = {};
+  function preprocessData(data: any[]): ProcessedData[] {
+    const groupedData: { [key: string]: ParticipantData[] } = {};
 
     data.forEach((row) => {
-      const participant = row.Participant;
+      const participant = row.Participant as string;
       if (!groupedData[participant]) {
         groupedData[participant] = [];
       }
@@ -56,7 +53,7 @@ export default function MainPage() {
     });
   }
 
-  function saveProcessedData(data) {
+  function saveProcessedData(data: ProcessedData[]): void {
     // Determine the maximum number of time-rating pairs
     const maxPairs = Math.max(...data.map((item) => item.Data.length));
 
@@ -68,7 +65,9 @@ export default function MainPage() {
 
     // Transform data to match headers
     const transformedData = data.map((item) => {
-      const rowData = { Participant: item.Participant };
+      const rowData: { [key: string]: string | number } = {
+        Participant: item.Participant,
+      };
       item.Data.forEach((pair, index) => {
         rowData[`Time${index + 1}`] = pair.Time;
         rowData[`Rating${index + 1}`] = pair.Rating;
