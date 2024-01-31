@@ -20,7 +20,7 @@ export default function MainPage() {
     setFile(file);
   };
 
-  const handleFileProcess = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleFileProcess = () => {
     if (!file) return;
 
     const reader = new FileReader();
